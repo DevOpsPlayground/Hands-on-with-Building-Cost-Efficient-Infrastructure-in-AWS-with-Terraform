@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "website" {
-  bucket = "${var.myPanda}.devopsplayground.org"
+  bucket = "playground-${var.my_panda}.devopsplayground.org"
   acl    = "public-read"
 
   tags = {
@@ -29,7 +29,7 @@ data "aws_route53_zone" "main" {
 }
 resource "aws_route53_record" "link" {
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = var.myPanda
+  name    = var.my_panda
   type    = "CNAME"
   ttl     = "300"
 

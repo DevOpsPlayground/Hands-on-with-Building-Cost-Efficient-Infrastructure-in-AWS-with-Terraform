@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "website" {
-  bucket = "${var.myPanda}.devopsplayground.org"
+  bucket = "playground-${var.my_panda}.devopsplayground.org"
   acl    = "public-read"
 
   tags = {
@@ -33,7 +33,7 @@ data "aws_route53_zone" "main" {
 
 resource "aws_route53_record" "link" {
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = var.myPanda
+  name    = var.my_panda
   type    = "CNAME"
   ttl     = "300"
 
@@ -43,11 +43,11 @@ resource "aws_route53_record" "link" {
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_file = "./content/app.py"
-  output_path = "./content/${var.myPanda}.zip"
+  output_path = "./content/${var.my_panda}.zip"
 }
 resource "aws_lambda_function" "main" {
   filename         = data.archive_file.lambda_zip.output_path
-  function_name    = "playground-${var.myPanda}"
+  function_name    = "playground-${var.my_panda}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "app.lambda_handler"
   timeout          = 180
@@ -55,15 +55,15 @@ resource "aws_lambda_function" "main" {
 
   runtime = "python3.7"
   environment {
-    variables = var.envVars
+    variables = var.env_vars
   }
   tags = {
-    "Owner" = "playground-${var.myPanda}"
+    "Owner" = "playground-${var.my_panda}"
   }
 }
 
 resource "aws_iam_role" "lambda_role" {
-  name = "playground-${var.myPanda}"
+  name = "playground-${var.my_panda}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -79,7 +79,7 @@ resource "aws_iam_role" "lambda_role" {
   })
 
   tags = {
-    "Owner" = "playground-${var.myPanda}"
+    "Owner" = "playground-${var.my_panda}"
   }
 }
 
@@ -92,8 +92,8 @@ resource "aws_lambda_permission" "allow_apiGateway" {
 }
 
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "playground-${var.myPanda}-api"
-  description = "The api gateway for ${var.myPanda}"
+  name        = "playground-${var.my_panda}-api"
+  description = "The api gateway for ${var.my_panda}"
   endpoint_configuration {
     types = ["REGIONAL"]
   }

@@ -11,7 +11,7 @@ We have yet another challenge to solve, we need to make sure that same user will
 Our first step will be to create a database table where we will store our users, we will need to add the following to our `main.tf`
 ```golang
 resource "aws_dynamodb_table" "users" {
-  name             = "playground-${var.myPanda}"
+  name             = "playground-${var.my_panda}"
   hash_key         = "users"
   billing_mode     = "PAY_PER_REQUEST"
   stream_enabled   = false
@@ -20,14 +20,14 @@ resource "aws_dynamodb_table" "users" {
     type = "S"
   }
   tags = {
-    Owner = "playground-${var.myPanda}"
+    Owner = "playground-${var.my_panda}"
   }
 }
 ```
 Next we need to make sure that our Lambda function has sufficient permissions.
 ```golang
 resource "aws_iam_policy" "dynamodb" {
-  name        = "playground-${var.myPanda}"
+  name        = "playground-${var.my_panda}"
   path        = "/"
   description = "DynamoDB policy for lambda"
 

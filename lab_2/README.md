@@ -1,18 +1,18 @@
 # Deploying application backend and creating API
 ## User story
-```
+
 Hello DevOps team! I know we promised to keep you on the loop, but things were a little hectic recently and not everything went according to the plan. We can reveal that our amazing service will find your spiritual animal - awesome right? Well, there is one problem tho. Our sofisticated algorithym is not ready yet and we kind of promised that we will launch the service today.Backend team desinged a python function which will find a spiritual animal for our customers for now. It is not what we intended to deliver, but it is what we can deliver. Ups almost forgot - can we deliver it somehow? Frontend is ready, backend is ready - could you guys tie it toegheter somehow? You probably guessed that by now, but just to be clear - budget is still not approved! I am sure you can make it!
-```
+
 
 ## Note from the frontend team
-```
+
 Hey guys - We are not responsible for making APIs so we left invocation URL blank for now but the rest is there for you - just plug it in!
-```
+
 
 ## Note from the backend team
-```
+
 Hey guys, we are still working on approved animals list, but you should have the latest version of it in animal-list.txt file. Just make sure it is on whatever server you are running our code as environment variable called "ANIMALS". Our sofisticated code will do the rest. Works on my machine!
-```
+
 
 ## Approach
 Now we have a python function to deploy, new frontend and if that wouldn't be enough we need to desing an API which will make those two working. We also need to remember to have an environment variable to be present on our server. We can most likely reuse our configuration from the previous lab to deploy the front end. For the backend with no budget? I say, lets go serverless and use lambda which supports python runtime, especially with such a small function (see `app.py`). Once we got those two ready we can create API gateway triggering our function and it should work!
@@ -84,12 +84,12 @@ Lets build our lambda function, we will need to add:
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_file = "./content/app.py"
-  output_path = "./content/${var.myPanda}.zip"
+  output_path = "./content/${var.my_panda}.zip"
 }
 
 resource "aws_lambda_function" "main" {
   filename      = data.archive_file.lambda_zip.output_path
-  function_name = "playground-${var.myPanda}"
+  function_name = "playground-${var.my_panda}"
   role          = aws_iam_role.lambda_role.arn
   handler       = "app.lambda_handler"
   timeout       = 180
@@ -100,7 +100,7 @@ resource "aws_lambda_function" "main" {
     variables = var.env_vars
   }
   tags = {
-    "Owner" = "playground-${var.myPanda}"
+    "Owner" = "playground-${var.my_panda}"
   }
 }
 ```
@@ -117,7 +117,7 @@ variable "env_vars" {
 And create an IAM role for the function:
 ```golang
 resource "aws_iam_role" "lambda_role" {
-  name = "playground-${var.myPanda}"
+  name = "playground-${var.my_panda}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -133,7 +133,7 @@ resource "aws_iam_role" "lambda_role" {
   })
 
   tags = {
-    "Owner" = "playground-${var.myPanda}"
+    "Owner" = "playground-${var.my_panda}"
   }
 }
 ```
@@ -146,8 +146,8 @@ Now we need to tie it all together and create an API. We will use AWS API Gatewa
 Create an API
 ```golang
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "playground-${var.myPanda}-api"
-  description = "The api gateway for ${var.myPanda}"
+  name        = "playground-${var.my_panda}-api"
+  description = "The api gateway for ${var.my_panda}"
   endpoint_configuration {
     types = ["REGIONAL"]
   }

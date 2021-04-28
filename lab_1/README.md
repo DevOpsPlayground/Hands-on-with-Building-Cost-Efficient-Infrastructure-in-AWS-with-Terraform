@@ -35,8 +35,8 @@ It looks like we have an easy job here. All we need to do is to ship it to the c
 First we need to create an S3 bucket which will host our website. Let's create `main.tf` in our `lab_1` directory and add the configuration below.
 ```go
 resource "aws_s3_bucket" "website" {
-  bucket       = "devops-playground-${var.myPanda}"
-  acl          = "public-read"
+  bucket = "playground-${var.my_panda}.devopsplayground.org"
+  acl    = "public-read"
 
   tags = {
     ManagedBy = "terraform"
@@ -44,12 +44,11 @@ resource "aws_s3_bucket" "website" {
   website {
     index_document = "index.html"
   }
-}
 ```
 Looks pretty simple, but you probably notice a scary `$` annoucing interpolated variable. S3 buckets need to be unique across the whole AWS so we need to make sure that we are not trying to create one which is already there. Each lucky participant of today's workshop should have his own instance with the unique Panda. Let's create `variables.tf` file in our `lab_1` directory and add our unique pande there.
 It should look more or less like below:
 ```go
-variable "myPanda" {
+variable "my_panda" {
   default = "YOUR-UNIQUE-PANDA"
   description = "The name of your panda (provided with environment) i.e. happy-panda"
 }
