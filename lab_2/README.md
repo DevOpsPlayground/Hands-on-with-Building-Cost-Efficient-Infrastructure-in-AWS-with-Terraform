@@ -338,4 +338,4 @@ Once we tested that everything works, we can destroy our infrastructure and move
 ```
 terraform destroy
 ```
-[Next - Adding Database layer](../lab_2/README.md)
+[Next - Adding Database layer](../lab_3/README.md)
