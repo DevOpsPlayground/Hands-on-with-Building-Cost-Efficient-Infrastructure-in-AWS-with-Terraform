@@ -1,0 +1,56 @@
+<html>
+    <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript">         
+    function submitToAPI(e) {
+        e.preventDefault();
+        var URL = "${URL}";
+        var name = $("#name").val();
+        var data = {
+          "name" : name
+        };
+
+       $.ajax({
+         type: "POST",
+         url : "${URL}",
+         dataType: "json",
+         contentType: "application/json; charset=utf-8",
+         data: JSON.stringify(data),
+
+         
+        success: function(response) {
+                document.getElementById("form-response").innerHTML = "Your spiritual animal is " + response["animal"];
+        },
+         error: function (request, error) {
+            console.log(arguments);
+            alert(" Can't do because: " + error);
+    }});
+     }
+    </script>
+        <style>
+            .center {
+              margin: auto;
+              width: 70%;
+              padding: 10px;
+              text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="center">
+            <img src="./image.jpeg" height="228px" width="273px">
+        </div>
+        <div class="center">
+            <form id="contact-form" method="post">
+                <div class="center">
+                <h1><b>Give us your name - we will find your spiritual animal!</b></h1>
+                <input type="text" id="name" style="margin-top:20px;" size="30" placeholder="Your beautiful name here..."/>
+                </div>
+                <button type="submit" onClick="submitToAPI(event)" style="margin-top:20px;">Submit</button>
+            </form>
+        </div>
+        <div class="center">
+            <div id="form-response"></div>
+        </div>
+    </body>
+</html>
