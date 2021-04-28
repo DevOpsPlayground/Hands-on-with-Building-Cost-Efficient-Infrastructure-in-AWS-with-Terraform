@@ -1,8 +1,8 @@
 # Implementing database
 ## User story
-```
+
 Hello DevOps team, thank you for saving us last time! I am afraid we will need your help again. Service is great and it is all what we were wishing for, but some of our customers are suggesting that it is not credible as you are getting different animal for the same names - can we do something about it?
-```
+
 
 ## Approach
 We have yet another challenge to solve, we need to make sure that same user will not get the different animal each time they try to use our service. We need to add some persistent storage to our design to do so and we will use a DynamoDB, a NoSQL database which we can eaisly integrate with our current desing. All we need to do is to create the table which will store the users with their assigned animals and modify our lambda function too check for "already predicted"  users first and return the previous assingment. We can use the code from our previos labs to start with.
