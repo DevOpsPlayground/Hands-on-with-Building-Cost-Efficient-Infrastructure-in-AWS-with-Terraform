@@ -273,6 +273,9 @@ to
 ```
 We can now try
 ```
+terraform init
+```
+```
 terraform apply
 ```
 And go to our website, and try to test our deployment. We will still get an error.
@@ -355,7 +358,7 @@ resource "aws_api_gateway_deployment" "deployment" {
     aws_api_gateway_integration.options_integration_item
   ]
   rest_api_id = aws_api_gateway_rest_api.api.id
-  stage_name  = "v1"
+  stage_name  = "v2"
 }
 ```
 

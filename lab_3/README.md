@@ -8,6 +8,13 @@ Hello DevOps team, thank you for saving us last time! I am afraid we will need y
 We have yet another challenge to solve, we need to make sure that same user will not get the different animal each time they try to use our service. We need to add some persistent storage to our design to do so and we will use a DynamoDB, a NoSQL database which we can eaisly integrate with our current desing. All we need to do is to create the table which will store the users with their assigned animals and modify our lambda function too check for "already predicted"  users first and return the previous assingment. We can use the code from our previos labs to start with.
 ## Lets do it
 ### Step one: Create a database table
+Configuration from the previous lab is already in `main.tf`, just add your panda to `variables.tf` and make sure you ran `terraform destroy` on previous workspace (lab_2)
+```go
+variable "my_panda" {
+  default     = "YOUR-PANDA"
+  description = "The name of your panda (provided with environment) i.e. happy-panda"
+}
+```
 Our first step will be to create a database table where we will store our users, we will need to add the following to our `main.tf`
 ```golang
 resource "aws_dynamodb_table" "users" {

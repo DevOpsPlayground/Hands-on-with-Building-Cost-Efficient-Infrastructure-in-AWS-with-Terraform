@@ -4,7 +4,7 @@
     <script type="text/javascript">         
     function submitToAPI(e) {
         e.preventDefault();
-        var URL = "${URL}";
+        var URL = "API is not our job to do...";
         var name = $("#name").val();
         var data = {
           "name" : name
@@ -12,7 +12,7 @@
 
        $.ajax({
          type: "POST",
-         url : "${URL}",
+         url : "API is not our job to do...",
          dataType: "json",
          contentType: "application/json; charset=utf-8",
          data: JSON.stringify(data),
