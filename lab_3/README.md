@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "users" {
   }
 }
 ```
-Next we need to make sure that our Lambda function has sufficient permissions.
+Next we need to make sure that our Lambda function has sufficient permissions so we will create appropriate policy.
 ```golang
 resource "aws_iam_policy" "dynamodb" {
   name        = "playground-${var.my_panda}"
@@ -45,7 +45,16 @@ resource "aws_iam_policy" "dynamodb" {
   })
 }
 ```
-Once we ensure that our function can talk to our database, now we need to modify our function to do so, we need to check if users with the certain name already tried to use our service and if so we want them to get the same animal. We also need to save the users with unique names. We will use boto3 and a few lines below should do it.
+And attach it to the role
+```go
+resource "aws_iam_policy_attachment" "lambda" {
+  name = "dynamodb-to-lambda"
+  roles = [aws_iam_role.lambda_role.name]
+  policy_arn = aws_iam_policy.dynamodb.arn
+}
+​​​​​​​
+```
+Once we ensure that our function can talk to our database, now we need to modify our function to do so, we need to check if users with the certain name already tried to use our service and if so we want them to get the same animal. We also need to save the users with unique names. We will use boto3 and a few lines below should do it. Please replace `YOUR-PANDA` with the value from your variables
 ```python
 import os
 import random
@@ -58,19 +67,17 @@ dynamodb = boto3.resource("dynamodb", region_name='eu-west-2')
 ANIMALS = os.environ['ANIMALS'].split(",")
 
 def spiritual_animal_finder(event):
-    animals = ANIMALS
     response = {
         "animal": check_user(event)
     }
     return response
     
 def check_user(event):
-    animals = ANIMALS
     if "name" in event:
         user = event["name"]
     else:
         return "Bad request, no user key in the payload"    
-    users = dynamodb.Table('playground-happy-panda')
+    users = dynamodb.Table('playground-YOUR-PANDA')
     try:
         response = users.get_item(
             Key={
@@ -84,12 +91,12 @@ def check_user(event):
         if 'Item' in response:
             return response['Item']['animals']
         else:
-            animal = random.choice(animals)
+            animal = random.choice(ANIMALS)
             add_user(user, animal)
             return animal
             
 def add_user(user,animal):
-    table = dynamodb.Table('playground-happy-panda')
+    table = dynamodb.Table('playground-YOUR-PANDA')
     table.update_item(
         Key={
         'users': user

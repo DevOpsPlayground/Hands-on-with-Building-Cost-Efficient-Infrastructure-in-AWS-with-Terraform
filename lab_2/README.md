@@ -17,6 +17,7 @@ Hey guys, we are still working on approved animals list, but you should have the
 ## Approach
 Now we have a python function to deploy, new frontend and if that wouldn't be enough we need to desing an API which will make those two working. We also need to remember to have an environment variable to be present on our server. We can most likely reuse our configuration from the previous lab to deploy the front end. For the backend with no budget? I say, lets go serverless and use lambda which supports python runtime, especially with such a small function (see `app.py`). Once we got those two ready we can create API gateway triggering our function and it should work!
 ## Lets do it
+
 ### Step one: Deploy the static frontend, again...
 We know from our frontend team that we will need to add API invocation URL to the file but apart from that we should be good to go! Lets have a peak on our brand new html file.
 ```html
@@ -50,6 +51,21 @@ We know from our frontend team that we will need to add API invocation URL to th
 ...
 ```
 The lovely `"API is not our job to do..."` strikes us straight away, but lets do not worry about it just yet - we will get to that. Apart from this little detail we should be able to deploy it using our precious work from the previous lab! Recycling at its finest! We should get an error while submiting the form, but we are getting somewhere :)
+Configuration from the previous lab is already in `main.tf`, just add your panda to `variables.tf` and make sure you ran `terraform destroy` on previous workspace (lab_1)
+```go
+variable "my_panda" {
+  default     = "YOUR-PANDA"
+  description = "The name of your panda (provided with environment) i.e. happy-panda"
+}
+```
+We need to run in our `lab_2` directory
+```
+terraform init
+```
+```
+terraform apply
+```
+
 ### Step two: Deploy our backend code
 Lets have a look on what our backend team brought to the table. DevOps team is definitely not as skilled in python, but maybe we can make something out of it.
 ```python
@@ -79,7 +95,7 @@ Lets type `ls -al` in our `content` directory and check
 
 Uff - 3.1KB - lets hope that we will not get many more animals approved!
 
-Lets build our lambda function, we will need to add:
+Lets build our lambda function, we will need to add to our `main.tf` in `lab_2` directory:
 ```golang
 data "archive_file" "lambda_zip" {
   type        = "zip"
@@ -104,12 +120,12 @@ resource "aws_lambda_function" "main" {
   }
 }
 ```
-We also need to add our animals to the variables:
+We also need to add code below to the `variables.tf` file and add string from `content/animal-list.txt` as a value of ANIMALS:
 ```golang
 variable "env_vars" {
   type        = map(string)
   default = {
-      ANIMALS = "animals"
+      ANIMALS = "use animals from animal-list.txt"
   }
   description = "The enviroment variables for the function"
 }
@@ -142,7 +158,7 @@ https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lamb
 https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/archive_file
 https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 ### Create an API
-Now we need to tie it all together and create an API. We will use AWS API Gateway to do so and here is what we need to add to our configuration:
+Now we need to tie it all together and create an API. We will use AWS API Gateway to do so and here is what we need to add to our configuration (`main.tf`):
 Create an API
 ```golang
 resource "aws_api_gateway_rest_api" "api" {
@@ -153,7 +169,7 @@ resource "aws_api_gateway_rest_api" "api" {
   }
 }
 ```
-Then we need to create a method  for our website 
+Then we need to create a method for our website 
 https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method
 ```golang
 resource "aws_api_gateway_method" "method" {
@@ -206,6 +222,60 @@ resource "aws_api_gateway_integration_response" "response_200" {
   depends_on = [aws_api_gateway_integration.integration]
 }
 ```
+Lastly we need to add gateway deployment to our configuration to make sure that our updates are live.
+```golang
+resource "aws_api_gateway_deployment" "deployment" {
+  depends_on = [
+    aws_api_gateway_integration.integration,
+    aws_api_gateway_integration_response.response_200
+  ]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = "v1"
+}
+```
+Now, we have an api and lambda code ready we need to add permissions to our function:
+```golang
+resource "aws_lambda_permission" "allow_apiGateway" {
+  statement_id  = "AllowAPIInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.main.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/*"
+}
+```
+Now we need to update our html frontend with our api url, we can use `templatefile` function to pass the url dynamically. We need to change our s3 object slightly
+```golang
+#FROM
+resource "aws_s3_bucket_object" "index" {
+  bucket       = aws_s3_bucket.website.id
+  key          = "index.html"
+  source       = "./content/index.html"
+  acl          = "public-read"
+  content_type = "text/html"
+}
+#TO
+resource "aws_s3_bucket_object" "index" {
+  bucket       = aws_s3_bucket.website.id
+  key          = "index.html"
+  content      = templatefile("${path.module}/content/index.tmpl", { URL = aws_api_gateway_deployment.deployment.invoke_url })
+  acl          = "public-read"
+  content_type = "text/html"
+}
+```
+And we need to edit our `index.html`, replace "API is not our job to do..." with "${URL}": and save it as `index.tmpl`:
+```html
+from
+ var URL = "API is not our job to do..."
+ url : "API is not our job to do...",
+to
+ var URL = "${URL}";
+ url : "${URL}",
+```
+We can now try
+```
+terraform apply
+```
+And go to our website, and try to test our deployment. We will still get an error.
 Our POST request is non-simple, as it contains custom headers and so we need to enable CORS support.
 
 When a browser receives a non-simple HTTP request, the CORS protocol requires the browser to send a preflight
@@ -276,7 +346,7 @@ resource "aws_api_gateway_integration_response" "options_integration_item_respon
   depends_on = [aws_api_gateway_method_response.options_200_item]
 }
 ```
-Lastly we need to add gateway deployment to our configuration to make sure that our updates are live.
+We also need to update our deployment to make sure it includes the last step
 ```golang
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [
@@ -288,49 +358,9 @@ resource "aws_api_gateway_deployment" "deployment" {
   stage_name  = "v1"
 }
 ```
-Now, we have an api and lambda code ready we need to add permissions to our function:
-```golang
-resource "aws_lambda_permission" "allow_apiGateway" {
-  statement_id  = "AllowAPIInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.main.arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/*"
-}
-```
-Now we need to update our html frontend with our api url, we can use `templatefile` function to pass the url dynamically. We need to change our s3 object slightly
-```golang
-#FROM
-resource "aws_s3_bucket_object" "index" {
-  bucket       = aws_s3_bucket.website.id
-  key          = "index.html"
-  source       = "./content/index.html"
-  acl          = "public-read"
-  content_type = "text/html"
-}
-#TO
-resource "aws_s3_bucket_object" "index" {
-  bucket       = aws_s3_bucket.website.id
-  key          = "index.html"
-  content      = templatefile("${path.module}/content/index.tmpl", { URL = aws_api_gateway_deployment.deployment.invoke_url })
-  acl          = "public-read"
-  content_type = "text/html"
-}
-```
-And we need to edit our `index.html` and save it as `index.tmpl`:
-```html
-from
- var URL = "API is not our job to do..."
- url : "API is not our job to do...",
-to
- var URL = "${URL}";
- url : "${URL}",
-```
+
 Finally - It is time to deploy our service and see if it works as expected! Our spiritual animal  should be awaiting us after:
-```
-terraform init
-```
-We changed directory so we need to initialise in our new workspace
+
 ```
 terraform apply
 ```

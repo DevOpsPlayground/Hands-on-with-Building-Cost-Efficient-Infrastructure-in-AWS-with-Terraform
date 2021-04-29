@@ -1,8 +1,8 @@
 # Deploying static website using S3
+
 ## User story
-```
 Hello DevOps team! We are working on groundbreaking idea which our marketing team is already promoting. Front-end team desinged a simple static page with the launch date. Can we deploy it for yesterday? Oh - frogot to say, budget is not approved yet so there is no budget. Thanks.
-```
+
 ## Approach
 Our requirements are not well defined yet, but we need to act quick. We do not want to make too many assumptions because we do not know yet what is going to come, and we do not have any money to spend. Let's do it as simple as possible while keeping it easy to change and expand.
 We are going to use S3 bucket to store our static content and we are going to use terraform to make our life easier in the future.
@@ -32,7 +32,7 @@ As you probably noticed we have a directory called `content` with a mysterious `
 </html>
 ```
 It looks like we have an easy job here. All we need to do is to ship it to the cloud!
-First we need to create an S3 bucket which will host our website. Let's create `main.tf` in our `lab_1` directory and add the configuration below.
+First we need to create an S3 bucket which will host our website. Let's go to the `main.tf` file in our `lab_1` directory and add the configuration below.
 ```go
 resource "aws_s3_bucket" "website" {
   bucket = "playground-${var.my_panda}.devopsplayground.org"
@@ -44,6 +44,7 @@ resource "aws_s3_bucket" "website" {
   website {
     index_document = "index.html"
   }
+}
 ```
 Looks pretty simple, but you probably notice a scary `$` annoucing interpolated variable. S3 buckets need to be unique across the whole AWS so we need to make sure that we are not trying to create one which is already there. Each lucky participant of today's workshop should have his own instance with the unique Panda. Let's create `variables.tf` file in our `lab_1` directory and add our unique pande there.
 It should look more or less like below:
