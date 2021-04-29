@@ -122,7 +122,15 @@ def lambda_handler(event, context):
 
 ```
 
-Once we saved our files it is time to hit `terraform apply` for the last time and se our app in action! Our service should work as required now! 
+Once we saved our files it is time to hit 
+```
+terraform init
+``` 
+and
+```
+terraform apply
+``` 
+for the last time and se our app in action! Our service should work as required now! 
 
 That is all  we had for you today, once your app is tested don't forget to run 
 ```
